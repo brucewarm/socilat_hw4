@@ -1,0 +1,170 @@
+<html>  
+  <head>  
+        <meta charset="utf-8">  
+        <title>關係圖</title>  
+		<!-- jQuery js -->	
+		<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+		
+		<!--include the highcharts library-->
+		<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script src="http://code.highcharts.com/highcharts.js"></script>
+  </head> 
+
+<style>
+
+
+</style>
+    <body>  
+		<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>  
+        <script>	
+		$.get('https://raw.githubusercontent.com/brucewarm/socilat_hw4/master/name.txt', function (data) {
+			$.get('https://raw.githubusercontent.com/brucewarm/socilat_hw4/master/relation_edge.txt', function (data1) {
+				$.get('https://raw.githubusercontent.com/brucewarm/socilat_hw4/master/degree.txt', function (data2) {
+					$.get('https://raw.githubusercontent.com/brucewarm/socilat_hw4/master/node_degree.txt', function (data3) {
+						var lines = data.split("\n")
+						var data1_lines = data1.split("\n")
+						var degree = data2.split("\n")
+						var node_degree = data3.split("\n")
+					
+								
+								
+						var temp = [];
+						var temp2 = [];
+						var temp3 = [];
+						var temp4 = [];
+						for(i = 0;i<lines.length;i++){
+							temp.push({name: lines[i]})
+						}
+						alert("人數: "+temp.length)
+						
+						alert("邊數: "+data1_lines.length)
+						for(i = 0;i<data1_lines.length-1;i++){
+							
+							
+							var sou = data1_lines[i].split(",")[0];
+							var tar = data1_lines[i].split(",")[1];
+							//if(parseInt((Math.random()*100))>0 )  //回傳0或1
+							//{
+							temp2.push({ source :  parseInt(sou)  , target: parseInt(tar) })
+							//}
+						}
+						alert("調整後邊數: "+temp2.length)
+						
+
+						for(i = 0;i<degree.length-1;i++){
+							temp3.push(parseInt(degree[i])/3)
+							//temp3.push(15)
+						}
+						alert("權重數: "+temp3.length)
+						
+						for(i = 0;i<node_degree.length-1;i++){
+							temp4.push(parseInt(node_degree[i]/10))
+							//temp3.push(15)
+						}
+	
+						
+						alert(temp3[1]["r"])
+						var width = 6000;
+						var height = 4000;
+						
+						
+						var svg = d3.select("body")
+									.append("svg")
+									.attr("width",width)
+									.attr("height",height);
+									//.attr("preserveAspectRatio", "xMidYMid meet")
+									//.attr("viewBox", "0 0 6000 4000");
+						
+						var force = d3.layout.force()
+								//.nodes(nodes)		//指定节点数组
+								//.links(edges)		//指定连线数组
+								.nodes(temp)		//指定节点数组
+								.links(temp2)		//指定连线数组
+								.size([width,height])	//指定范围
+								.linkDistance(1200)	//指定连线长度
+								.charge(-300);	//相互之间的作用力
+
+						force.start();	//开始作用
+
+						console.log(temp);
+						console.log(temp2);
+						
+						//添加连线
+						var count = -1;
+						var svg_edges = svg.selectAll("line")
+											//.data(edges)
+											.data(temp2)
+											.enter()
+											.append("line")
+											.style("stroke","#ccc")
+											.attr("stroke-width", function(d) { 
+												count = count + 1; 
+												return temp3[count]; 
+											})
+											//.attr("style", function(d) { return ("stroke-width:" + 10 + "px;");})
+											//.style("stroke-width",50);
+											/*.attr("style", function(d) {
+												var minRadius = 10;
+												return ("stroke-width: "+10+"px;");
+												//return ("stroke-width:"  + (minRadius + temp3[count] * 100)+"px;");
+											});*/
+						
+						var color = d3.scale.category20();
+						
+						var count = -1
+						//添加节点			
+						var svg_nodes = svg.selectAll("circle")
+											//.data(nodes)
+											.data(temp)
+											.enter()
+											.append("circle")
+											.attr("r",15)
+											.attr("r", function(d) { 
+																		//alert(count);
+																		var minRadius = 10;
+																		count = count + 1;
+																		return 10 + temp4[count]*5;																 
+											})
+											.style("fill",function(d,i){
+												return color(i);
+											})
+											.call(force.drag);	//使得节点能够拖动
+
+						//添加描述节点的文字
+						var svg_texts = svg.selectAll("text")
+											//.data(nodes)
+											.data(temp)
+											.enter()
+											.append("text")
+											.style("fill", "black")
+											.attr("dx", 8)
+											.attr("dy", 8)
+											.text(function(d){
+												return d.name;
+											});
+									
+
+						force.on("tick", function(){	//对于每一个时间间隔
+						
+							 //更新连线坐标
+							 svg_edges.attr("x1",function(d){ return d.source.x; })
+									.attr("y1",function(d){ return d.source.y; })
+									.attr("x2",function(d){ return d.target.x; })
+									.attr("y2",function(d){ return d.target.y; });
+							 
+							 //更新节点坐标
+							 svg_nodes.attr("cx",function(d){ return d.x; })
+									.attr("cy",function(d){ return d.y; });
+
+							 //更新文字坐标
+							 svg_texts.attr("x", function(d){ return d.x; })
+								.attr("y", function(d){ return d.y; });
+						});
+					});	
+				});	
+			});
+		});
+        </script>  
+		
+    </body>  
+</html>  
